@@ -1,9 +1,11 @@
 package com.demo.LibraryManagement.controller;
 
 import com.demo.LibraryManagement.DTO.BookDTO;
+import com.demo.LibraryManagement.DTO.BorrowRecordDTO;
 import com.demo.LibraryManagement.DTO.UserDTO;
 import com.demo.LibraryManagement.enums.BookStatus;
 import com.demo.LibraryManagement.service.BookService;
+import com.demo.LibraryManagement.service.BorrowedRecordService;
 import com.demo.LibraryManagement.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +19,12 @@ public class UserController {
 private final UserService userservice;
 
 private final BookService bookService;
+private final BorrowedRecordService borrowrecordservice;
 
-    public UserController(UserService userservice, BookService bookService) {
+    public UserController(UserService userservice, BookService bookService, BorrowedRecordService borrowrecordservice) {
         this.userservice = userservice;
         this.bookService = bookService;
+        this.borrowrecordservice = borrowrecordservice;
     }
     @PostMapping("/createuser")
    public ResponseEntity<UserDTO> saveUser(@RequestBody UserDTO userdto) {
@@ -55,5 +59,10 @@ private final BookService bookService;
                                                     @RequestParam(required = false) BookStatus status){
        List<BookDTO> bookDTOList = bookService.searchBooks(title, author, category, isbn, status);
        return new ResponseEntity<>(bookDTOList,HttpStatus.FOUND);
+   }
+@PostMapping("/{userId}/borrow")
+   public ResponseEntity<BorrowRecordDTO> BorrowRequest(@PathVariable Long userId, @RequestParam Long bookId){
+       BorrowRecordDTO borrowRecordDTO = borrowrecordservice.borrowBook(userId, bookId);
+       return  ResponseEntity.ok(borrowRecordDTO);
    }
 }

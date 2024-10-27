@@ -7,11 +7,12 @@ import com.demo.LibraryManagement.Repository.BookRepository;
 import com.demo.LibraryManagement.Repository.UserRepository;
 import com.demo.LibraryManagement.service.UserService;
 import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+@Service
 public class UserServiceImpl implements UserService {
 
 

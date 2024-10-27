@@ -8,23 +8,26 @@ import com.demo.LibraryManagement.Entity.User;
 import com.demo.LibraryManagement.Exception.CopiesNotAvailableOrExceedException;
 import com.demo.LibraryManagement.Exception.ResourceNotFoundException;
 import com.demo.LibraryManagement.Repository.BookRepository;
-import com.demo.LibraryManagement.Repository.BorroewRecordrepository;
+import com.demo.LibraryManagement.Repository.BorrowRecordrepository;
 import com.demo.LibraryManagement.Repository.FineRepository;
 import com.demo.LibraryManagement.Repository.UserRepository;
 import com.demo.LibraryManagement.enums.FineStatus;
 import com.demo.LibraryManagement.service.BookService;
-import com.demo.LibraryManagement.service.BorrowedRecord;
+import com.demo.LibraryManagement.service.BorrowedRecordService;
 import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.DAYS;
-
-public class BorrowedRecordServiceImpl implements BorrowedRecord {
+@Service
+public class BorrowedRecordServiceImpl implements BorrowedRecordService {
     private final BookRepository bookrepository;
     private final UserRepository userrepository;
-    private final BorroewRecordrepository borrowrecordrepository;
+    private final BorrowRecordrepository borrowrecordrepository;
     private final BookService bookservice;
 
     private final FineRepository fineRepository;
@@ -34,7 +37,7 @@ public class BorrowedRecordServiceImpl implements BorrowedRecord {
     private static final int MAX_BORROW_DAYS=14;
     private static final double DAILY_FINE_RATE=10; //per day fine
 
-    public BorrowedRecordServiceImpl(BookRepository bookrepository, UserRepository userrepository, BorroewRecordrepository borrowrecordrepository, BookService bookservice, FineRepository fineRepository, ModelMapper modelmapper) {
+    public BorrowedRecordServiceImpl(BookRepository bookrepository, UserRepository userrepository, BorrowRecordrepository borrowrecordrepository, BookService bookservice, FineRepository fineRepository, ModelMapper modelmapper) {
         this.bookrepository = bookrepository;
         this.userrepository = userrepository;
         this.borrowrecordrepository = borrowrecordrepository;
@@ -66,8 +69,8 @@ public class BorrowedRecordServiceImpl implements BorrowedRecord {
     }
 
     @Override
-    public BorrowRecordDTO returnBook(Long userId, Long bookId) {
-        Optional<BorrowRecord> borrowRecordOpt  = borrowrecordrepository.findByUserIdAndBookIdAndReturndateIsNull(userId, bookId);
+    public BorrowRecordDTO returnBook(Long borrowRecordId) {
+        Optional<BorrowRecord> borrowRecordOpt  = borrowrecordrepository.findById(borrowRecordId);
         if(borrowRecordOpt.isEmpty()){
          throw new ResourceNotFoundException(" No active borrow record found for this user and book");
         }
@@ -91,7 +94,7 @@ public class BorrowedRecordServiceImpl implements BorrowedRecord {
        }
 
         Book book = borrowRecord.getBook();
-       book.setAvailableCopies(book.getAvailableCopies()+1);
+       bookservice.increaseavailablecopies(book.getId());
        bookrepository.save(book);
 
        borrowRecord.setReturndate(currentreturndate);
@@ -99,4 +102,25 @@ public class BorrowedRecordServiceImpl implements BorrowedRecord {
         BorrowRecordDTO map = modelmapper.map(saveborrowrecord, BorrowRecordDTO.class);
         return map;
     }
+
+    @Override
+    public List<BorrowRecordDTO> getUserBorrowHistory(Long userId) {
+        List<BorrowRecord> byUserId = borrowrecordrepository.findByUserId(userId);
+        List<BorrowRecordDTO> collect = byUserId.stream().map(borrowrecordentity -> modelmapper.map(borrowrecordentity, BorrowRecordDTO.class)).collect(Collectors.toList());
+        return collect;
+    }
+
+    @Override
+    public BorrowRecordDTO getBorrowRecordById(Long borrowRecordid) {
+        Optional<BorrowRecord> byId = borrowrecordrepository.findById(borrowRecordid);
+        if(byId.isPresent()){
+            BorrowRecord borrowRecord = byId.get();
+            return modelmapper.map(borrowRecord, BorrowRecordDTO.class);
+        }else {
+            throw new ResourceNotFoundException("BorrowRecord with given id is not found");
+        }
+
+    }
+
+
 }
