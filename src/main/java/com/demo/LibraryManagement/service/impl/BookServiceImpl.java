@@ -2,6 +2,7 @@ package com.demo.LibraryManagement.service.impl;
 
 import com.demo.LibraryManagement.DTO.BookDTO;
 import com.demo.LibraryManagement.Entity.Book;
+import com.demo.LibraryManagement.Exception.CopiesNotAvailableOrExceedException;
 import com.demo.LibraryManagement.Exception.ResourceNotFoundException;
 import com.demo.LibraryManagement.Repository.BookRepository;
 import com.demo.LibraryManagement.enums.BookStatus;
@@ -64,6 +65,37 @@ public class BookServiceImpl implements BookService {
         List<Book> books = bookrepository.BookSearch(title, author, category, isbn, status);
         List<BookDTO> collect = books.stream().map(bookEntity -> modelmapper.map(bookEntity, BookDTO.class)).collect(Collectors.toList());
         return collect;
+    }
+    @Override
+    public void decreaseavailablecopies(Long bookid){
+        Optional<Book> bookExist = isBookExist(bookid);
+        if(bookExist.isPresent()){
+            Book book = bookExist.get();
+            if(book.getAvailableCopies()>0){
+                book.setAvailableCopies(book.getAvailableCopies()-1);
+                bookrepository.save(book);
+            }else{
+                throw new CopiesNotAvailableOrExceedException("No copies available");
+            }
+        }else {
+            throw new ResourceNotFoundException("No books available with given copies");
+        }
+    }
+
+    @Override
+    public void increaseavailablecopies(Long bookid) {
+        Optional<Book> bookExist = isBookExist(bookid);
+        if(bookExist.isPresent()){
+            Book book = bookExist.get();
+            if(book.getAvailableCopies()<book.getTotalCopies()){
+                book.setAvailableCopies(book.getAvailableCopies()+1);
+                bookrepository.save(book);
+            }else{
+                throw new CopiesNotAvailableOrExceedException("Can not exceed total Copies");
+            }
+        }else {
+            throw new ResourceNotFoundException("No books available with given copies");
+        }
     }
 
 

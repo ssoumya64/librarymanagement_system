@@ -13,4 +13,6 @@ public interface BookService {
     BookDTO getBookById(Long bookid);
 
     List<BookDTO> searchBooks(String title, String author, String category, String isbn, BookStatus status);
+    void decreaseavailablecopies(Long bookid);
+    void increaseavailablecopies(Long bookid);
 }

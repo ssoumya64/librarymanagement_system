@@ -1,6 +1,7 @@
 package com.demo.LibraryManagement.DTO;
 
 import com.demo.LibraryManagement.Entity.Book;
+import com.demo.LibraryManagement.Entity.BorrowRecord;
 import com.demo.LibraryManagement.Entity.Fine;
 import com.demo.LibraryManagement.Entity.User;
 import jakarta.persistence.JoinColumn;
@@ -25,4 +26,6 @@ public class BorrowRecordDTO {
     private LocalDate returndate;
 
     private List<Fine> fines;
+
+
 }

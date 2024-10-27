@@ -10,4 +10,8 @@ public class GlobalExceptionHandler {
     public ExceptionResponse handleResourceNotFound(ResourceNotFoundException exception){
       return  ExceptionResponse.builder().status(HttpStatus.NOT_FOUND).message(exception.getMessage()).build();
     }
+    @ExceptionHandler(CopiesNotAvailableOrExceedException.class)
+    public ExceptionResponse handleCopiesUnavailable(CopiesNotAvailableOrExceedException exception){
+        return ExceptionResponse.builder().status(HttpStatus.NOT_FOUND).message(exception.getMessage()).build();
+    }
 }

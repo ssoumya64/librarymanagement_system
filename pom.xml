@@ -11,6 +11,7 @@
 	<groupId>com.LibraryMgmtSystem</groupId>
 	<artifactId>LibraryManagement</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
 	<name>LibraryManagement</name>
 	<description>Demo project for Library Management</description>
 	<url/>
@@ -75,8 +76,18 @@
 						</exclude>
 					</excludes>
 				</configuration>
+
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+
+				<configuration>
+					<!-- Customize WAR settings if needed -->
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
 
 </project>
