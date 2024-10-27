@@ -1,6 +1,7 @@
 package com.demo.LibraryManagement.Entity;
 
 import com.demo.LibraryManagement.enums.BookStatus;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,6 +31,7 @@ public class Book {
     @Enumerated(EnumType.STRING)
     private BookStatus status;
     @OneToMany(mappedBy = "book")
+    @JsonManagedReference
     private List<BorrowRecord> borrowRecord;
     @ManyToMany(mappedBy = "issuedbook")
     private List<User> usersWithIssuedBook;
