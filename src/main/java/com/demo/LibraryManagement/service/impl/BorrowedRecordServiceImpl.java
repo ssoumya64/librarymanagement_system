@@ -14,6 +14,7 @@ import com.demo.LibraryManagement.Repository.UserRepository;
 import com.demo.LibraryManagement.enums.FineStatus;
 import com.demo.LibraryManagement.service.BookService;
 import com.demo.LibraryManagement.service.BorrowedRecordService;
+import com.demo.LibraryManagement.service.FineService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -30,19 +31,19 @@ public class BorrowedRecordServiceImpl implements BorrowedRecordService {
     private final BorrowRecordrepository borrowrecordrepository;
     private final BookService bookservice;
 
-    private final FineRepository fineRepository;
+    private final FineService fineservice;
 
     private final ModelMapper modelmapper;
 
     private static final int MAX_BORROW_DAYS=14;
     private static final double DAILY_FINE_RATE=10; //per day fine
 
-    public BorrowedRecordServiceImpl(BookRepository bookrepository, UserRepository userrepository, BorrowRecordrepository borrowrecordrepository, BookService bookservice, FineRepository fineRepository, ModelMapper modelmapper) {
+    public BorrowedRecordServiceImpl(BookRepository bookrepository, UserRepository userrepository, BorrowRecordrepository borrowrecordrepository, BookService bookservice, FineService fineservice, ModelMapper modelmapper) {
         this.bookrepository = bookrepository;
         this.userrepository = userrepository;
         this.borrowrecordrepository = borrowrecordrepository;
         this.bookservice = bookservice;
-        this.fineRepository = fineRepository;
+        this.fineservice = fineservice;
         this.modelmapper = modelmapper;
     }
 
@@ -75,29 +76,18 @@ public class BorrowedRecordServiceImpl implements BorrowedRecordService {
          throw new ResourceNotFoundException(" No active borrow record found for this user and book");
         }
         BorrowRecord borrowRecord = borrowRecordOpt.get();
-        LocalDate currentreturndate = LocalDate.now();
+        BorrowRecordDTO borrowRecordDTO = modelmapper.map(borrowRecord, BorrowRecordDTO.class);
+        LocalDate currentDate = LocalDate.now();
         LocalDate dueDate = borrowRecord.getBorrowdate().plusWeeks(2);
-       if(currentreturndate.isAfter(dueDate)){
-           long delayday = DAYS.between(dueDate, currentreturndate);
-           double fineAmount = delayday * DAILY_FINE_RATE;
+        Fine fine = fineservice.createFine(borrowRecord.getUser(), borrowRecordDTO, dueDate);
+        borrowRecord.getFines().add(fine);
 
-           Fine fine=new Fine();
-           fine.setUser(borrowRecord.getUser());
-           fine.setBorrowrecord(borrowRecord);
-           fine.setAmount(fineAmount);
-           fine.setIssueDate(currentreturndate);
-           fine.setFinsestatus(FineStatus.UNPAID);
-
-           fineRepository.save(fine);
-
-           borrowRecord.getFines().add(fine);
-       }
 
         Book book = borrowRecord.getBook();
        bookservice.increaseavailablecopies(book.getId());
        bookrepository.save(book);
 
-       borrowRecord.setReturndate(currentreturndate);
+       borrowRecord.setReturndate(currentDate);
         BorrowRecord saveborrowrecord = borrowrecordrepository.save(borrowRecord);
         BorrowRecordDTO map = modelmapper.map(saveborrowrecord, BorrowRecordDTO.class);
         return map;
