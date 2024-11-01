@@ -1,10 +1,16 @@
 package com.demo.LibraryManagement.service.impl;
 
+import com.demo.LibraryManagement.DTO.FineDTO;
 import com.demo.LibraryManagement.DTO.UserDTO;
+import com.demo.LibraryManagement.Entity.BorrowRecord;
+import com.demo.LibraryManagement.Entity.Fine;
 import com.demo.LibraryManagement.Entity.User;
 import com.demo.LibraryManagement.Exception.ResourceNotFoundException;
 import com.demo.LibraryManagement.Repository.BookRepository;
+import com.demo.LibraryManagement.Repository.BorrowRecordrepository;
+import com.demo.LibraryManagement.Repository.FineRepository;
 import com.demo.LibraryManagement.Repository.UserRepository;
+import com.demo.LibraryManagement.enums.FineStatus;
 import com.demo.LibraryManagement.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -18,10 +24,15 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userrepository;
 
+    private final BorrowRecordrepository borrowRecordRepository;
+    private final FineRepository fineRepository;
+
     private final ModelMapper modelmapper;
 
-    public UserServiceImpl(UserRepository userrepository, ModelMapper modelmapper) {
+    public UserServiceImpl(UserRepository userrepository, BorrowRecordrepository borrowRecordrepository, BorrowRecordrepository borrowRecordRepository, FineRepository fineRepository, ModelMapper modelmapper) {
         this.userrepository = userrepository;
+        this.borrowRecordRepository = borrowRecordRepository;
+        this.fineRepository = fineRepository;
         this.modelmapper = modelmapper;
     }
 
@@ -74,6 +85,28 @@ public class UserServiceImpl implements UserService {
             return "User deleted Successfully";
         }
         return null;
+    }
+
+    @Override
+    public void deactivateUser(Long userId) {
+        User user = userrepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        // Check if user has any active borrow records
+        List<BorrowRecord> activeBorrowRecords = borrowRecordRepository.findByUserId(userId);
+        if (!activeBorrowRecords.isEmpty()) {
+            throw new IllegalStateException("User cannot be deactivated while having active borrow records.");
+        }
+
+        // Optionally, you may want to check for unpaid fines
+        List<FineDTO> unpaidFines = fineRepository.findByUserIdAndFinsestatus(userId, FineStatus.UNPAID);
+        if (!unpaidFines.isEmpty()) {
+            throw new IllegalStateException("User cannot be deactivated while having unpaid fines.");
+        }
+
+        // Deactivate user
+        user.setIsActive(false); // Assuming you have an 'active' field in the User entity
+        userrepository.save(user);
     }
 
     private Optional<User> isUserExist(Long userid){

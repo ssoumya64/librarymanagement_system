@@ -76,10 +76,10 @@ public class BorrowedRecordServiceImpl implements BorrowedRecordService {
          throw new ResourceNotFoundException(" No active borrow record found for this user and book");
         }
         BorrowRecord borrowRecord = borrowRecordOpt.get();
-        BorrowRecordDTO borrowRecordDTO = modelmapper.map(borrowRecord, BorrowRecordDTO.class);
+
         LocalDate currentDate = LocalDate.now();
         LocalDate dueDate = borrowRecord.getBorrowdate().plusWeeks(2);
-        Fine fine = fineservice.createFine(borrowRecord.getUser(), borrowRecordDTO, dueDate);
+        Fine fine = fineservice.createFine(borrowRecord.getUser(), borrowRecord, dueDate);
         borrowRecord.getFines().add(fine);
 
 

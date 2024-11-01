@@ -13,4 +13,5 @@ public interface UserService {
     UserDTO updateUserProfile(UserDTO userdto,Long userid);
 
     String removeUser(Long id);
+    void deactivateUser(Long userId);
 }

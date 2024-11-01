@@ -28,4 +28,6 @@ public class UserDTO {
     private List<Book> issuedbook;
 
     private List<Fine> fines;
+
+    private Boolean isActive;
 }

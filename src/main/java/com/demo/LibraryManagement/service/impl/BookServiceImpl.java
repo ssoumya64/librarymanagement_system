@@ -66,6 +66,39 @@ public class BookServiceImpl implements BookService {
         List<BookDTO> collect = books.stream().map(bookEntity -> modelmapper.map(bookEntity, BookDTO.class)).collect(Collectors.toList());
         return collect;
     }
+
+    @Override
+    public BookDTO updateBook(Long bookId, BookDTO bookDTO) {
+        Optional<Book> bookExist = isBookExist(bookId);
+        if(bookExist.isPresent()){
+            Book existingBook = bookExist.get();
+            // Update the fields with values from bookDTO
+            existingBook.setTitle(bookDTO.getTitle());
+            existingBook.setAuthor(bookDTO.getAuthor());
+            existingBook.setISBN(bookDTO.getISBN());
+            existingBook.setCategory(bookDTO.getCategory());
+            existingBook.setPublisher(bookDTO.getPublisher());
+            existingBook.setPublicationDate(bookDTO.getPublicationDate());
+            existingBook.setTotalCopies(bookDTO.getTotalCopies());
+            existingBook.setAvailableCopies(bookDTO.getAvailableCopies());
+            existingBook.setStatus(bookDTO.getStatus());
+           return modelmapper.map(existingBook,BookDTO.class);
+        }else {
+            throw new ResourceNotFoundException("Book with given id not found");
+        }
+
+    }
+
+    @Override
+    public String deleteBook(Long bookId) {
+        if (!bookrepository.existsById(bookId)) {
+            throw new ResourceNotFoundException("Book not found with id: " + bookId);
+        }
+
+        bookrepository.deleteById(bookId);
+        return "Data Deleted Successfully";
+    }
+
     @Override
     public void decreaseavailablecopies(Long bookid){
         Optional<Book> bookExist = isBookExist(bookid);

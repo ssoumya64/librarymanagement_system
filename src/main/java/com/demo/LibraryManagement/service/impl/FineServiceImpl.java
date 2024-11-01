@@ -1,6 +1,7 @@
 package com.demo.LibraryManagement.service.impl;
 
 import com.demo.LibraryManagement.DTO.BorrowRecordDTO;
+import com.demo.LibraryManagement.DTO.FineDTO;
 import com.demo.LibraryManagement.Entity.BorrowRecord;
 import com.demo.LibraryManagement.Entity.Fine;
 import com.demo.LibraryManagement.Entity.User;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FineServiceImpl implements FineService {
@@ -29,8 +31,8 @@ public class FineServiceImpl implements FineService {
 
         this.modelmapper = modelmapper;
     }
-
-    public Fine createFine(User user, BorrowRecordDTO borrowrecordDTO, LocalDate dueDate) {
+    @Override
+    public Fine createFine(User user, BorrowRecord borrowrecordDTO, LocalDate dueDate) {
         BorrowRecord borrowrecord = modelmapper.map(borrowrecordDTO, BorrowRecord.class);
         long overDueDay = ChronoUnit.DAYS.between(dueDate, LocalDate.now());
         if (overDueDay < 0) {
@@ -46,22 +48,32 @@ public class FineServiceImpl implements FineService {
         fine.setFinsestatus(FineStatus.UNPAID);
         return finerepository.save(fine);
     }
+
     private double calculateFineAmount(long overDueDay) {
         return overDueDay*DAILY_FINE_RATE;
     }
-   public Fine payFine(Long fineId){
+   @Override
+    public Fine payFine(Long fineId){
        Fine fine = finerepository.findById(fineId).orElseThrow(() -> new ResourceNotFoundException("No Fine id is found"));
        fine.setFinsestatus(FineStatus.PAID);
        fine.setPaidDate(LocalDate.now());
        return finerepository.save(fine);
     }
+    @Override
     public List<Fine> getFineByUser(Long userId){
         List<Fine> byUserId = finerepository.findByUserId(userId);
         return byUserId;
     }
-
+    @Override
     public List<Fine> getFineByBorrowRecord(Long borrowRecordId){
         return finerepository.findByBorrowrecordId(borrowRecordId);
+    }
+    @Override
+    public List<FineDTO> getUnpaidFines(Long userId) {
+        List<FineDTO> unpaidFines = finerepository.findByUserIdAndFinsestatus(userId, FineStatus.UNPAID);
+        return unpaidFines.stream()
+                .map(fine -> modelmapper.map(fine, FineDTO.class)) // Assuming you have a FineDTO to map the Fine entity
+                .collect(Collectors.toList());
     }
 
 }

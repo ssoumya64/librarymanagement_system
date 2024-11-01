@@ -42,4 +42,6 @@ public class User {
     @JsonManagedReference
     private List<Fine> fines;
 
+    private Boolean isActive;
+
 }
